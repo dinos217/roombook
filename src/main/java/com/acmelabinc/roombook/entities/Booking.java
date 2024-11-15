@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
 import java.io.Serializable;
@@ -34,31 +35,28 @@ public class Booking implements Serializable {
     @Column(name = "booking_date", nullable = false)
     private LocalDate bookingDate;
 
-    @Column(name = "time_from", nullable = false)
-    private LocalTime timeFrom;
+    @Column(name = "start_time", nullable = false)
+    private LocalTime startTime;
 
-    @Column(name = "time_to", nullable = false)
-    private LocalTime timeTo;
+    @Column(name = "end_time", nullable = false)
+    private LocalTime endTime;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    public Booking() {}
 
-    public Booking() {
-    }
-
-    public Booking(Long id, Room room, Employee employee, LocalDate bookingDate, LocalTime timeFrom, LocalTime timeTo,
-                   LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
+    public Booking(Room room, Employee employee, LocalDate bookingDate, LocalTime timeFrom, LocalTime timeTo) {
         this.room = room;
         this.employee = employee;
         this.bookingDate = bookingDate;
-        this.timeFrom = timeFrom;
-        this.timeTo = timeTo;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
+        this.startTime = timeFrom;
+        this.endTime = timeTo;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -93,20 +91,20 @@ public class Booking implements Serializable {
         this.bookingDate = bookingDate;
     }
 
-    public LocalTime getTimeFrom() {
-        return timeFrom;
+    public LocalTime getStartTime() {
+        return startTime;
     }
 
-    public void setTimeFrom(LocalTime timeFrom) {
-        this.timeFrom = timeFrom;
+    public void setStartTime(LocalTime startTime) {
+        this.startTime = startTime;
     }
 
-    public LocalTime getTimeTo() {
-        return timeTo;
+    public LocalTime getEndTime() {
+        return endTime;
     }
 
-    public void setTimeTo(LocalTime timeTo) {
-        this.timeTo = timeTo;
+    public void setEndTime(LocalTime endTime) {
+        this.endTime = endTime;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -115,13 +113,5 @@ public class Booking implements Serializable {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 }

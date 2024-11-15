@@ -16,11 +16,11 @@ CREATE TABLE booking (
     room_id INT NOT NULL,
     employee_id VARCHAR NOT NULL,
     booking_date DATE NOT NULL,
-    time_from TIME NOT NULL,
-    time_to TIME NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room (id),
-    CONSTRAINT fk_employee FOREIGN KEY (employee_email) REFERENCES employee (email),
+    CONSTRAINT fk_employee FOREIGN KEY (employee_email) REFERENCES employee (email)
 );
