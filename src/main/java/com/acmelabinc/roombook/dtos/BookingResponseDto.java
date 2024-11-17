@@ -6,6 +6,7 @@ import java.time.LocalTime;
 public class BookingResponseDto {
 
     private Long id;
+    private String room;
     private String bookedBy;
     private LocalDate bookingDate;
     private LocalTime timeFrom;
@@ -14,8 +15,10 @@ public class BookingResponseDto {
     public BookingResponseDto() {
     }
 
-    public BookingResponseDto(Long id, String bookedBy, LocalDate bookingDate, LocalTime timeFrom, LocalTime timeTo) {
+    public BookingResponseDto(Long id, String room, String bookedBy, LocalDate bookingDate, LocalTime timeFrom,
+                              LocalTime timeTo) {
         this.id = id;
+        this.room = room;
         this.bookedBy = bookedBy;
         this.bookingDate = bookingDate;
         this.timeFrom = timeFrom;
@@ -28,6 +31,14 @@ public class BookingResponseDto {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getRoom() {
+        return room;
+    }
+
+    public void setRoom(String room) {
+        this.room = room;
     }
 
     public String getBookedBy() {

@@ -12,8 +12,8 @@ public class BookingConverter {
     }
 
     public static BookingResponseDto convert(Booking booking) {
-        return new BookingResponseDto(booking.getId(), booking.getEmployee().getEmail(), booking.getBookingDate(),
-                booking.getStartTime(), booking.getEndTime());
+        return new BookingResponseDto(booking.getId(), booking.getRoom().getName(), booking.getEmployee().getEmail(),
+                booking.getBookingDate(), booking.getStartTime(), booking.getEndTime());
     }
 
     public static Booking convert(BookingRequestDto bookingRequestDto, Room room, Employee employee) {

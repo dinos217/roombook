@@ -14,5 +14,5 @@ import java.time.LocalTime;
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     Page<Booking> findByRoomAndBookingDate(Room room, LocalDate date, Pageable pageable);
-    Boolean existsByRoomAndBookingDateAndStartTime(Room room, LocalDate localDate, LocalTime startTime, LocalTime endTime);
+    Boolean existsByRoomAndBookingDateAndStartTimeAndEndTime(Room room, LocalDate localDate, LocalTime startTime, LocalTime endTime);
 }

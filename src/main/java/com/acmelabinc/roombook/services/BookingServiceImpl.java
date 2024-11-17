@@ -27,6 +27,7 @@ import java.util.List;
 @Service
 public class BookingServiceImpl implements BookingService {
 
+    private static final int HOUR_MINUTES = 60;
     private static final String BOOKING_CANCELLATION_MSG = "Booking was cancelled successfully.";
     private static final String ROOM_NOT_FOUND = "Room not found: ";
     private static final String EMPLOYEE_NOT_FOUND = "Employee not found: ";
@@ -34,13 +35,15 @@ public class BookingServiceImpl implements BookingService {
     private static final String BOOKING_OVERLAP = "The booking overlaps with an existing booking for the same room.";
     private static final String BOOKING_CANNOT_BE_CANCELED = "This booking is not a future booking and it cannot be canceled.";
     private static final String END_BEFORE_START_WARNING = "This booking can only take place in a time machine!";
+    private static final String BOOKING_VALID_DURATION = "Bookings should last at least 1 hour or consecutive multiples of 1 hour (2, 3, 4, ...).";
 
     private final BookingRepository bookingRepository;
     private final RoomRepository roomRepository;
     private final EmployeeRepository employeeRepository;
 
     @Autowired
-    public BookingServiceImpl(BookingRepository bookingRepository, RoomRepository roomRepository, EmployeeRepository employeeRepository) {
+    public BookingServiceImpl(BookingRepository bookingRepository, RoomRepository roomRepository,
+                              EmployeeRepository employeeRepository) {
         this.bookingRepository = bookingRepository;
         this.roomRepository = roomRepository;
         this.employeeRepository = employeeRepository;
@@ -71,18 +74,10 @@ public class BookingServiceImpl implements BookingService {
         Employee employee = employeeRepository.findByEmail(bookingRequestDto.getEmployeeEmail())
                 .orElseThrow(() -> new NotFoundException(EMPLOYEE_NOT_FOUND + bookingRequestDto.getEmployeeEmail()));
 
-        if (bookingRequestDto.getEndTime().isBefore(bookingRequestDto.getStartTime())) {
-            throw new BadRequestException(END_BEFORE_START_WARNING);
-        }
+        validateDuration(bookingRequestDto.getStartTime(), bookingRequestDto.getEndTime());
+        validateNoOverlap(bookingRequestDto, room);
 
-        //todo: add validation for hourly meetings
-
-        if (bookingRepository.existsByRoomAndBookingDateAndStartTime(room, bookingRequestDto.getBookingDate(),
-                bookingRequestDto.getStartTime(), bookingRequestDto.getEndTime())) {
-            throw new BadRequestException(BOOKING_OVERLAP);
-        }
-
-        Booking bookingToBeSaved = BookingConverter.convert(bookingRequestDto, room, employee);
+        Booking bookingToBeSaved = BookingConverter.convert(bookingRequestDto, room, employee); //todo: check why it's wrong to initialize Class with static methods and then call the methods
         Booking booking = bookingRepository.save(bookingToBeSaved);
 
         return BookingConverter.convert(booking);
@@ -99,6 +94,26 @@ public class BookingServiceImpl implements BookingService {
         }
 
         return BOOKING_CANCELLATION_MSG;
+    }
+
+    private void validateDuration(LocalTime startTime, LocalTime endTime) {
+
+        if (endTime.isBefore(startTime)) {
+            throw new BadRequestException(END_BEFORE_START_WARNING);
+        }
+
+        long minutes = Duration.between(startTime, endTime).toMinutes();
+        if (minutes < HOUR_MINUTES || minutes % HOUR_MINUTES != 0) {
+            throw new BadRequestException(BOOKING_VALID_DURATION);
+        }
+    }
+
+    private void validateNoOverlap(BookingRequestDto bookingRequestDto, Room room) {
+
+        if (bookingRepository.existsByRoomAndBookingDateAndStartTimeAndEndTime(room, bookingRequestDto.getBookingDate(),
+                bookingRequestDto.getStartTime(), bookingRequestDto.getEndTime())) {
+            throw new BadRequestException(BOOKING_OVERLAP);
+        }
     }
 
     private Page<BookingResponseDto> buildResponseListPaged(Page<Booking> bookingsFromDb, Pageable pageable) {
