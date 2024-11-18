@@ -7,8 +7,7 @@ CREATE TABLE employee (
 
 CREATE TABLE room (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL,
-    capacity INT DEFAULT 0
+    name VARCHAR(50) UNIQUE NOT NULL
 );
 
 CREATE TABLE booking (
@@ -22,5 +21,5 @@ CREATE TABLE booking (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room (id),
-    CONSTRAINT fk_employee FOREIGN KEY (employee_id) REFERENCES employee (email)
+    CONSTRAINT fk_employee FOREIGN KEY (employee_id) REFERENCES employee (id)
 );

@@ -107,9 +107,23 @@ public class BookingServiceTest {
     }
 
     @Test
+    void testSave_PastDay() {
+
+        BookingRequestDto requestDto = builidValidBookingRequestDto();
+        requestDto.setBookingDate(LocalDate.now().minusDays(1));
+
+        BadRequestException exception = assertThrows(BadRequestException.class,
+                () -> bookingService.save(requestDto));
+
+        assertEquals("This day is gone forever.", exception.getMessage());
+    }
+
+    @Test
     void testSave_InvalidStartEndTime() {
 
-        BookingRequestDto requestDto = builidInvalidStartEndTimeBookingRequestDto();
+        BookingRequestDto requestDto = builidValidBookingRequestDto();
+        requestDto.setStartTime(LocalTime.of(10, 0));
+        requestDto.setEndTime(LocalTime.of(9, 0));
 
         BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> bookingService.save(requestDto));
@@ -120,7 +134,9 @@ public class BookingServiceTest {
     @Test
     void testSave_NotHourlyDuration() {
 
-        BookingRequestDto requestDto = builidNotHourlyBookingRequestDto();
+        BookingRequestDto requestDto = builidValidBookingRequestDto();
+        requestDto.setStartTime(LocalTime.of(10, 0));
+        requestDto.setEndTime(LocalTime.of(11, 30));
 
         BadRequestException exception = assertThrows(BadRequestException.class, () -> bookingService.save(requestDto));
 
@@ -191,7 +207,7 @@ public class BookingServiceTest {
     }
 
     @Test
-    void testCancel_PastBookingCannotBeCanceled() {
+    void testCancel_PastBooking() {
 
         Long bookingId = 1L;
         Booking booking = buildBooking(buildRoom(), buildEmployee());
@@ -248,29 +264,9 @@ public class BookingServiceTest {
         BookingRequestDto requestDto = new BookingRequestDto();
         requestDto.setRoomName("room1");
         requestDto.setEmployeeEmail("dinos@acme.com");
-        requestDto.setBookingDate(LocalDate.of(2024, 11, 17));
+        requestDto.setBookingDate(LocalDate.of(2024, 12, 17));
         requestDto.setStartTime(LocalTime.of(10, 0));
         requestDto.setEndTime(LocalTime.of(12, 0));
-        return requestDto;
-    }
-
-    private static BookingRequestDto builidInvalidStartEndTimeBookingRequestDto() {
-        BookingRequestDto requestDto = new BookingRequestDto();
-        requestDto.setRoomName("room1");
-        requestDto.setEmployeeEmail("dinos@acme.com");
-        requestDto.setBookingDate(LocalDate.of(2024, 11, 17));
-        requestDto.setStartTime(LocalTime.of(10, 0));
-        requestDto.setEndTime(LocalTime.of(9, 0));
-        return requestDto;
-    }
-
-    private static BookingRequestDto builidNotHourlyBookingRequestDto() {
-        BookingRequestDto requestDto = new BookingRequestDto();
-        requestDto.setRoomName("room1");
-        requestDto.setEmployeeEmail("dinos@acme.com");
-        requestDto.setBookingDate(LocalDate.of(2024, 11, 17));
-        requestDto.setStartTime(LocalTime.of(10, 0));
-        requestDto.setEndTime(LocalTime.of(11, 30));
         return requestDto;
     }
 }

@@ -37,6 +37,7 @@ public class BookingServiceImpl implements BookingService {
     private static final String BOOKING_CANNOT_BE_CANCELED = "This is not a future booking so it cannot be canceled.";
     private static final String END_BEFORE_START_WARNING = "This booking can only take place in a time machine!";
     private static final String BOOKING_VALID_DURATION = "Bookings should last at least 1 hour or consecutive multiples of 1 hour (2, 3, 4, ...).";
+    public static final String PAST_DAY_WARNING = "This day is gone forever.";
 
     private final BookingRepository bookingRepository;
     private final RoomRepository roomRepository;
@@ -69,7 +70,8 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public BookingResponseDto save(BookingRequestDto bookingRequestDto) {
 
-        validateDuration(bookingRequestDto.getStartTime(), bookingRequestDto.getEndTime());
+        validateDuration(bookingRequestDto.getBookingDate(), bookingRequestDto.getStartTime(),
+                bookingRequestDto.getEndTime());
 
         Room room = roomRepository.findByName(bookingRequestDto.getRoomName())
                 .orElseThrow(() -> new NotFoundException(ROOM_NOT_FOUND + bookingRequestDto.getRoomName()));
@@ -91,14 +93,20 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(BOOKING_NOT_FOUND));
 
-        if (booking.getBookingDate().isBefore(LocalDate.now()) && booking.getStartTime().isBefore(LocalTime.now())) {
+        if (booking.getBookingDate().isBefore(LocalDate.now())) {
+            throw new BadRequestException(BOOKING_CANNOT_BE_CANCELED);
+        } else if (booking.getStartTime().isBefore(LocalTime.now())) {
             throw new BadRequestException(BOOKING_CANNOT_BE_CANCELED);
         }
 
         return BOOKING_CANCELLATION_MSG;
     }
 
-    private void validateDuration(LocalTime startTime, LocalTime endTime) {
+    private void validateDuration(LocalDate bookingDate, LocalTime startTime, LocalTime endTime) {
+
+        if (bookingDate.isBefore(LocalDate.now())) {
+            throw new BadRequestException(PAST_DAY_WARNING);
+        }
 
         if (endTime.isBefore(startTime)) {
             throw new BadRequestException(END_BEFORE_START_WARNING);
