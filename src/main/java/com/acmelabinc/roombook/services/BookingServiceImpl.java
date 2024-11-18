@@ -34,7 +34,7 @@ public class BookingServiceImpl implements BookingService {
     private static final String EMPLOYEE_NOT_FOUND = "Employee not found: ";
     private static final String BOOKING_NOT_FOUND = "Booking was not found.";
     private static final String BOOKING_OVERLAP = "The booking overlaps with an existing booking for the same room.";
-    private static final String BOOKING_CANNOT_BE_CANCELED = "This booking is not a future booking and it cannot be canceled.";
+    private static final String BOOKING_CANNOT_BE_CANCELED = "This is not a future booking so it cannot be canceled.";
     private static final String END_BEFORE_START_WARNING = "This booking can only take place in a time machine!";
     private static final String BOOKING_VALID_DURATION = "Bookings should last at least 1 hour or consecutive multiples of 1 hour (2, 3, 4, ...).";
 

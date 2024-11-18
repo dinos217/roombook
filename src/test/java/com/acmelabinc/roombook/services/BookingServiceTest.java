@@ -16,9 +16,14 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -46,7 +51,42 @@ public class BookingServiceTest {
     }
 
     @Test
-    void testSave() {
+    void testGetByRoomAndDate_ValidRoomAndDate() {
+
+        String roomName = "room1";
+        LocalDate date = LocalDate.of(2024, 11, 18);
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Room room = buildRoom();
+        Booking booking = buildBooking(room, buildEmployee());
+        Page<Booking> bookingPage = new PageImpl<>(List.of(booking));
+
+        when(roomRepository.findByName(roomName)).thenReturn(Optional.of(room));
+        when(bookingRepository.findByRoomAndBookingDate(room, date, pageable)).thenReturn(bookingPage);
+
+        Page<BookingResponseDto> result = bookingService.getByRoomAndDate(roomName, date, pageable);
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals(roomName, result.getContent().getFirst().getRoom());
+    }
+
+    @Test
+    void testGetByRoomAndDate_RoomNotFound() {
+
+        String roomName = "Milky Way";
+        LocalDate date = LocalDate.of(2024, 11, 17);
+        Pageable pageable = PageRequest.of(0, 10);
+
+        when(roomRepository.findByName(roomName)).thenReturn(Optional.empty());
+
+        NotFoundException exception = assertThrows(NotFoundException.class,
+                () -> bookingService.getByRoomAndDate(roomName, date, pageable));
+
+        assertEquals("Room not found: Milky Way", exception.getMessage());
+    }
+
+    @Test
+    void testSave_Successful() {
 
         BookingRequestDto requestDto = builidValidBookingRequestDto();
         Room room = buildRoom();
@@ -67,7 +107,7 @@ public class BookingServiceTest {
     }
 
     @Test
-    void testSaveWithInvalidStartEndTime() {
+    void testSave_InvalidStartEndTime() {
 
         BookingRequestDto requestDto = builidInvalidStartEndTimeBookingRequestDto();
 
@@ -78,7 +118,7 @@ public class BookingServiceTest {
     }
 
     @Test
-    void testSaveWithNotHourlyDuration() {
+    void testSave_NotHourlyDuration() {
 
         BookingRequestDto requestDto = builidNotHourlyBookingRequestDto();
 
@@ -89,7 +129,7 @@ public class BookingServiceTest {
     }
 
     @Test
-    void testSaveInvalidRoomName() {
+    void testSave_InvalidRoomName() {
         BookingRequestDto requestDto = builidValidBookingRequestDto();
         requestDto.setRoomName("Earth");
 
@@ -101,7 +141,7 @@ public class BookingServiceTest {
     }
 
     @Test
-    void testSaveInvalidEmployeeEmail() {
+    void testSave_InvalidEmployeeEmail() {
 
         BookingRequestDto requestDto = builidValidBookingRequestDto();
         requestDto.setEmployeeEmail("eddie@acme.com");
@@ -117,7 +157,7 @@ public class BookingServiceTest {
     }
 
     @Test
-    void testSaveButSameBookingAlreadyExists() {
+    void testSave_SameBookingAlreadyExists() {
         BookingRequestDto requestDto = builidValidBookingRequestDto();
         Room room = buildRoom();
         Employee employee = buildEmployee();
@@ -133,6 +173,50 @@ public class BookingServiceTest {
 
         assertEquals("The booking overlaps with an existing booking for the same room.",
                 exception.getMessage());
+    }
+
+    @Test
+    void testCancel_Successful() {
+
+        Long bookingId = 1L;
+        Booking booking = buildBooking(buildRoom(), buildEmployee());
+        booking.setBookingDate(LocalDate.of(2024, 11, 19));
+        booking.setStartTime(LocalTime.of(10, 0));
+
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
+
+        String result = bookingService.cancel(bookingId);
+
+        assertEquals("Booking was cancelled successfully.", result);
+    }
+
+    @Test
+    void testCancel_PastBookingCannotBeCanceled() {
+
+        Long bookingId = 1L;
+        Booking booking = buildBooking(buildRoom(), buildEmployee());
+        booking.setBookingDate(LocalDate.now().minusDays(1));
+        booking.setStartTime(LocalTime.of(10, 0));
+
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
+
+        BadRequestException exception = assertThrows(BadRequestException.class,
+                () -> bookingService.cancel(bookingId));
+
+        assertEquals("This is not a future booking so it cannot be canceled.", exception.getMessage());
+    }
+
+    @Test
+    void testCancel_BookingNotFound() {
+
+        Long bookingId = 1L;
+
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.empty());
+
+        NotFoundException exception = assertThrows(NotFoundException.class,
+                () -> bookingService.cancel(bookingId));
+
+        assertEquals("Booking was not found.", exception.getMessage());
     }
 
     private static Employee buildEmployee() {
