@@ -6,6 +6,7 @@ import com.acmelabinc.roombook.dtos.BookingResponseDto;
 import com.acmelabinc.roombook.entities.Booking;
 import com.acmelabinc.roombook.entities.Employee;
 import com.acmelabinc.roombook.entities.Room;
+import com.acmelabinc.roombook.exceptions.AlreadyExistsException;
 import com.acmelabinc.roombook.exceptions.BadRequestException;
 import com.acmelabinc.roombook.exceptions.NotFoundException;
 import com.acmelabinc.roombook.repositories.BookingRepository;
@@ -68,13 +69,14 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public BookingResponseDto save(BookingRequestDto bookingRequestDto) {
 
+        validateDuration(bookingRequestDto.getStartTime(), bookingRequestDto.getEndTime());
+
         Room room = roomRepository.findByName(bookingRequestDto.getRoomName())
                 .orElseThrow(() -> new NotFoundException(ROOM_NOT_FOUND + bookingRequestDto.getRoomName()));
 
         Employee employee = employeeRepository.findByEmail(bookingRequestDto.getEmployeeEmail())
                 .orElseThrow(() -> new NotFoundException(EMPLOYEE_NOT_FOUND + bookingRequestDto.getEmployeeEmail()));
 
-        validateDuration(bookingRequestDto.getStartTime(), bookingRequestDto.getEndTime());
         validateNoOverlap(bookingRequestDto, room);
 
         Booking bookingToBeSaved = BookingConverter.convert(bookingRequestDto, room, employee); //todo: check why it's wrong to initialize Class with static methods and then call the methods
@@ -112,7 +114,7 @@ public class BookingServiceImpl implements BookingService {
 
         if (bookingRepository.existsByRoomAndBookingDateAndStartTimeAndEndTime(room, bookingRequestDto.getBookingDate(),
                 bookingRequestDto.getStartTime(), bookingRequestDto.getEndTime())) {
-            throw new BadRequestException(BOOKING_OVERLAP);
+            throw new AlreadyExistsException(BOOKING_OVERLAP);
         }
     }
 
