@@ -11,6 +11,7 @@ import java.time.LocalDate;
 @Service
 public interface BookingService {
 
+    Page<BookingResponseDto> getAll(Pageable pageable);
     Page<BookingResponseDto> getByRoomAndDate(String roomName, LocalDate date, Pageable pageable);
     BookingResponseDto save(BookingRequestDto bookingRequestDto);
     String cancel(Long id);

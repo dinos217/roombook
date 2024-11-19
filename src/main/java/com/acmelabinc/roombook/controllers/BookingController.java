@@ -47,6 +47,18 @@ public class BookingController {
         return ResponseEntity.status(HttpStatus.OK).body(bookingService.getByRoomAndDate(roomName, date, pageable));
     }
 
+    @GetMapping(value = "/all")
+    ResponseEntity<Page<BookingResponseDto>> getAll(@RequestParam(defaultValue = "0") Integer page,
+                                                    @RequestParam(defaultValue = "10") Integer pageSize,
+                                                    @RequestParam(defaultValue = "bookingDate") String sortBy,
+                                                    @RequestParam(defaultValue = "ASC") String direction) {
+
+        Sort sort = Sort.by(Sort.Direction.fromString(direction), sortBy);
+        Pageable pageable = PageRequest.of(page, pageSize, sort);
+
+        return ResponseEntity.status(HttpStatus.OK).body(bookingService.getAll(pageable));
+    }
+
     @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
     ResponseEntity<BookingResponseDto> save(@RequestBody BookingRequestDto bookingRequestDto) {
 

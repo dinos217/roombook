@@ -196,7 +196,7 @@ public class BookingServiceTest {
 
         Long bookingId = 1L;
         Booking booking = buildBooking(buildRoom(), buildEmployee());
-        booking.setBookingDate(LocalDate.of(2024, 11, 19));
+        booking.setBookingDate(LocalDate.of(2025, 11, 19));
         booking.setStartTime(LocalTime.of(10, 0));
 
         when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));

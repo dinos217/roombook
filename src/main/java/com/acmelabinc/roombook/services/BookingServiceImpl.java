@@ -52,6 +52,18 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    public Page<BookingResponseDto> getAll(Pageable pageable) {
+
+        Page<Booking> bookingsFromDb = bookingRepository.findAll(pageable);
+
+        if (bookingsFromDb.isEmpty()) {
+            return new PageImpl<>(Collections.emptyList());
+        }
+
+        return buildResponseListPaged(bookingsFromDb, pageable);
+    }
+
+    @Override
     public Page<BookingResponseDto> getByRoomAndDate(String roomName, LocalDate date, Pageable pageable) {
 
         Room room = roomRepository.findByName(roomName)
@@ -93,9 +105,7 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(BOOKING_NOT_FOUND));
 
-        if (booking.getBookingDate().isBefore(LocalDate.now())) {
-            throw new BadRequestException(BOOKING_CANNOT_BE_CANCELED);
-        } else if (booking.getStartTime().isBefore(LocalTime.now())) {
+        if (isPastBooking(booking.getBookingDate(), booking.getStartTime())) {
             throw new BadRequestException(BOOKING_CANNOT_BE_CANCELED);
         }
 
@@ -124,6 +134,11 @@ public class BookingServiceImpl implements BookingService {
                 bookingRequestDto.getStartTime(), bookingRequestDto.getEndTime())) {
             throw new AlreadyExistsException(BOOKING_OVERLAP);
         }
+    }
+
+    private boolean isPastBooking(LocalDate bookingDate, LocalTime bookingStartTime) {
+        return bookingDate.isBefore(LocalDate.now()) || (bookingDate.isEqual(LocalDate.now()) &&
+                bookingStartTime.isBefore(LocalTime.now()));
     }
 
     private Page<BookingResponseDto> buildResponseListPaged(Page<Booking> bookingsFromDb, Pageable pageable) {

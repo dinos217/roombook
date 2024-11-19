@@ -47,6 +47,21 @@ public class BookingControllerTest {
     }
 
     @Test
+    public void testGetAll() throws Exception {
+
+        MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders.post("/api/bookings")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(asJsonString(builidValidBookingRequestDto()));
+
+        mockMvc.perform(mockRequest);
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/bookings/all")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andDo(print());
+    }
+
+    @Test
     public void testSave() throws Exception {
 
         MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders.post("/api/bookings")
@@ -122,7 +137,6 @@ public class BookingControllerTest {
     public void testCancel() throws Exception {
 
         BookingRequestDto requestDto = builidValidBookingRequestDto();
-        requestDto.setBookingDate(LocalDate.of(2024, 12, 10));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/bookings")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -138,8 +152,7 @@ public class BookingControllerTest {
     @Test
     public void testCancel_ForPastBooking() throws Exception {
 
-        BookingRequestDto requestDto = builidValidBookingRequestDto();
-        requestDto.setBookingDate(LocalDate.of(2023, 12, 17));
+        BookingRequestDto requestDto = buildValidBookingRequestDtoForCancelTest();
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/bookings")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -157,8 +170,18 @@ public class BookingControllerTest {
         requestDto.setRoomName("Earth");
         requestDto.setEmployeeEmail("pluto@acme.com");
         requestDto.setBookingDate(LocalDate.of(2024, 12, 17));
-        requestDto.setStartTime(LocalTime.of(10, 0));
-        requestDto.setEndTime(LocalTime.of(12, 0));
+        requestDto.setStartTime(LocalTime.of(17, 0));
+        requestDto.setEndTime(LocalTime.of(18, 0));
+        return requestDto;
+    }
+
+    private static BookingRequestDto buildValidBookingRequestDtoForCancelTest() {
+        BookingRequestDto requestDto = new BookingRequestDto();
+        requestDto.setRoomName("Earth");
+        requestDto.setEmployeeEmail("pluto@acme.com");
+        requestDto.setBookingDate(LocalDate.now());
+        requestDto.setStartTime(LocalTime.of(5, 0));
+        requestDto.setEndTime(LocalTime.of(6, 0));
         return requestDto;
     }
 
