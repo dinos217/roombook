@@ -93,7 +93,7 @@ public class BookingServiceImpl implements BookingService {
 
         validateNoOverlap(bookingRequestDto, room);
 
-        Booking bookingToBeSaved = BookingConverter.convert(bookingRequestDto, room, employee); //todo: check why it's wrong to initialize Class with static methods and then call the methods
+        Booking bookingToBeSaved = BookingConverter.convert(bookingRequestDto, room, employee);
         Booking booking = bookingRepository.save(bookingToBeSaved);
 
         return BookingConverter.convert(booking);
@@ -130,8 +130,8 @@ public class BookingServiceImpl implements BookingService {
 
     private void validateNoOverlap(BookingRequestDto bookingRequestDto, Room room) {
 
-        if (bookingRepository.existsByRoomAndBookingDateAndStartTimeAndEndTime(room, bookingRequestDto.getBookingDate(),
-                bookingRequestDto.getStartTime(), bookingRequestDto.getEndTime())) {
+        if (bookingRepository.existsByRoomAndBookingDateAndStartTimeLessThanAndEndTimeGreaterThan(room,
+                bookingRequestDto.getBookingDate(), bookingRequestDto.getEndTime(), bookingRequestDto.getStartTime())) {
             throw new AlreadyExistsException(BOOKING_OVERLAP);
         }
     }

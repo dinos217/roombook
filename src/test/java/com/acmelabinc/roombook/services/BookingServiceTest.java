@@ -95,7 +95,7 @@ public class BookingServiceTest {
 
         when(roomRepository.findByName("room1")).thenReturn(Optional.of(room));
         when(employeeRepository.findByEmail("dinos@acme.com")).thenReturn(Optional.of(employee));
-        when(bookingRepository.existsByRoomAndBookingDateAndStartTimeAndEndTime(room, requestDto.getBookingDate(),
+        when(bookingRepository.existsByRoomAndBookingDateAndStartTimeLessThanAndEndTimeGreaterThan(room, requestDto.getBookingDate(),
                 requestDto.getStartTime(), requestDto.getEndTime())).thenReturn(false);
         when(bookingRepository.save(any(Booking.class))).thenReturn(booking);
 
@@ -177,12 +177,11 @@ public class BookingServiceTest {
         BookingRequestDto requestDto = builidValidBookingRequestDto();
         Room room = buildRoom();
         Employee employee = buildEmployee();
-        Booking booking = buildBooking(room, employee);
 
         when(roomRepository.findByName("room1")).thenReturn(Optional.of(room));
         when(employeeRepository.findByEmail("dinos@acme.com")).thenReturn(Optional.of(employee));
-        when(bookingRepository.existsByRoomAndBookingDateAndStartTimeAndEndTime(room, requestDto.getBookingDate(),
-                requestDto.getStartTime(), requestDto.getEndTime())).thenReturn(true);
+        when(bookingRepository.existsByRoomAndBookingDateAndStartTimeLessThanAndEndTimeGreaterThan(room, requestDto.getBookingDate(),
+                requestDto.getEndTime(), requestDto.getStartTime())).thenReturn(true);
 
         AlreadyExistsException exception = assertThrows(AlreadyExistsException.class,
                 () -> bookingService.save(requestDto));

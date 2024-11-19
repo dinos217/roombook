@@ -1,19 +1,19 @@
 CREATE TABLE employee (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     email VARCHAR UNIQUE NOT NULL,
     name VARCHAR(100),
     surname VARCHAR(100)
 );
 
 CREATE TABLE room (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL
 );
 
 CREATE TABLE booking (
-    id SERIAL PRIMARY KEY,
-    room_id INT NOT NULL,
-    employee_id VARCHAR NOT NULL,
+    id BIGSERIAL PRIMARY KEY,
+    room_id BIGINT NOT NULL,
+    employee_id BIGINT NOT NULL,
     booking_date DATE NOT NULL,
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
