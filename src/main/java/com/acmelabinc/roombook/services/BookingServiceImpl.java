@@ -13,6 +13,8 @@ import com.acmelabinc.roombook.repositories.BookingRepository;
 import com.acmelabinc.roombook.repositories.EmployeeRepository;
 import com.acmelabinc.roombook.repositories.RoomRepository;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -28,12 +30,14 @@ import java.util.List;
 @Service
 public class BookingServiceImpl implements BookingService {
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
     private static final int HOUR_MINUTES = 60;
     private static final String BOOKING_CANCELLATION_MSG = "Booking was cancelled successfully.";
     private static final String ROOM_NOT_FOUND = "Room not found: ";
     private static final String EMPLOYEE_NOT_FOUND = "Employee not found: ";
     private static final String BOOKING_NOT_FOUND = "Booking was not found.";
-    private static final String BOOKING_OVERLAP = "This room is already booked for the selected hours.";
+    private static final String BOOKING_OVERLAP = "This room is already booked for the selected hours or overlaps another booking.";
     private static final String BOOKING_CANNOT_BE_CANCELED = "This is not a future booking so it cannot be canceled.";
     private static final String END_BEFORE_START_WARNING = "This booking can only take place in a time machine!";
     private static final String BOOKING_VALID_DURATION = "Bookings should last at least 1 hour or consecutive multiples of 1 hour (2, 3, 4, ...).";
@@ -54,9 +58,12 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public Page<BookingResponseDto> getAll(Pageable pageable) {
 
+        logger.info("Finding all bookings");
+
         Page<Booking> bookingsFromDb = bookingRepository.findAll(pageable);
 
         if (bookingsFromDb.isEmpty()) {
+            logger.info("There are no bookings.");
             return new PageImpl<>(Collections.emptyList());
         }
 
@@ -66,21 +73,28 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public Page<BookingResponseDto> getByRoomAndDate(String roomName, LocalDate date, Pageable pageable) {
 
+        logger.info("Searching for bookings in room {} on date {}", roomName, date);
+
         Room room = roomRepository.findByName(roomName)
                 .orElseThrow(() -> new NotFoundException(ROOM_NOT_FOUND + roomName));
 
         Page<Booking> bookingsFromDb = bookingRepository.findByRoomAndBookingDate(room, date, pageable);
 
         if (bookingsFromDb.isEmpty()) {
+            logger.info("There are no bookings for room {} on date {}", roomName, date);
             return new PageImpl<>(Collections.emptyList());
         }
 
+        logger.info("Successfully found bookings in room {} on date {}", roomName, date);
         return buildResponseListPaged(bookingsFromDb, pageable);
     }
 
     @Transactional
     @Override
     public BookingResponseDto save(BookingRequestDto bookingRequestDto) {
+
+        logger.info("Saving a new booking in room {} on date {}",
+                bookingRequestDto.getRoomName(), bookingRequestDto.getBookingDate());
 
         validateDuration(bookingRequestDto.getBookingDate(), bookingRequestDto.getStartTime(),
                 bookingRequestDto.getEndTime());
@@ -96,19 +110,22 @@ public class BookingServiceImpl implements BookingService {
         Booking bookingToBeSaved = BookingConverter.convert(bookingRequestDto, room, employee);
         Booking booking = bookingRepository.save(bookingToBeSaved);
 
+        logger.info("Booking saved successfully with ID {}", booking.getId());
         return BookingConverter.convert(booking);
     }
 
     @Override
     public String cancel(Long id) {
 
-        Booking booking = bookingRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(BOOKING_NOT_FOUND));
+        logger.info("Cancelling booking with ID {}", id);
+
+        Booking booking = bookingRepository.findById(id).orElseThrow(() -> new NotFoundException(BOOKING_NOT_FOUND));
 
         if (isPastBooking(booking.getBookingDate(), booking.getStartTime())) {
             throw new BadRequestException(BOOKING_CANNOT_BE_CANCELED);
         }
 
+        logger.info("Booking with ID {} was cancelled successfully.", id);
         return BOOKING_CANCELLATION_MSG;
     }
 

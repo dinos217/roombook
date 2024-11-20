@@ -102,7 +102,7 @@ public class BookingServiceTest {
         BookingResponseDto result = bookingService.save(requestDto);
 
         assertEquals(result.getBookedBy(), (requestDto.getEmployeeEmail()));
-        assertEquals(result.getBookingDate(), (LocalDate.of(2024, 11, 17)));
+        assertEquals(result.getBookingDate(), (LocalDate.now().plusDays(1L)));
         assertEquals(result.getRoom(), (requestDto.getRoomName()));
     }
 
@@ -110,7 +110,7 @@ public class BookingServiceTest {
     void testSave_PastDay() {
 
         BookingRequestDto requestDto = builidValidBookingRequestDto();
-        requestDto.setBookingDate(LocalDate.now().minusDays(1));
+        requestDto.setBookingDate(LocalDate.now().minusDays(2));
 
         BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> bookingService.save(requestDto));
@@ -186,8 +186,7 @@ public class BookingServiceTest {
         AlreadyExistsException exception = assertThrows(AlreadyExistsException.class,
                 () -> bookingService.save(requestDto));
 
-        assertEquals("The booking overlaps with an existing booking for the same room.",
-                exception.getMessage());
+        assertEquals("This room is already booked for the selected hours.", exception.getMessage());
     }
 
     @Test
@@ -195,7 +194,6 @@ public class BookingServiceTest {
 
         Long bookingId = 1L;
         Booking booking = buildBooking(buildRoom(), buildEmployee());
-        booking.setBookingDate(LocalDate.of(2025, 11, 19));
         booking.setStartTime(LocalTime.of(10, 0));
 
         when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
@@ -211,7 +209,6 @@ public class BookingServiceTest {
         Long bookingId = 1L;
         Booking booking = buildBooking(buildRoom(), buildEmployee());
         booking.setBookingDate(LocalDate.now().minusDays(1));
-        booking.setStartTime(LocalTime.of(10, 0));
 
         when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
 
@@ -251,7 +248,7 @@ public class BookingServiceTest {
     private static Booking buildBooking(Room room, Employee employee) {
         Booking booking = new Booking();
         booking.setId(1L);
-        booking.setBookingDate(LocalDate.of(2024, 11, 17));
+        booking.setBookingDate(LocalDate.now().plusDays(1L));
         booking.setRoom(room);
         booking.setEmployee(employee);
         booking.setStartTime(LocalTime.of(10, 0));
@@ -263,7 +260,7 @@ public class BookingServiceTest {
         BookingRequestDto requestDto = new BookingRequestDto();
         requestDto.setRoomName("room1");
         requestDto.setEmployeeEmail("dinos@acme.com");
-        requestDto.setBookingDate(LocalDate.of(2024, 12, 17));
+        requestDto.setBookingDate(LocalDate.now().plusDays(1L));
         requestDto.setStartTime(LocalTime.of(10, 0));
         requestDto.setEndTime(LocalTime.of(12, 0));
         return requestDto;

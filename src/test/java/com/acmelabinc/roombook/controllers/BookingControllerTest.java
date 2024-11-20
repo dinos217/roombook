@@ -169,9 +169,9 @@ public class BookingControllerTest {
         BookingRequestDto requestDto = new BookingRequestDto();
         requestDto.setRoomName("Earth");
         requestDto.setEmployeeEmail("pluto@acme.com");
-        requestDto.setBookingDate(LocalDate.of(2024, 12, 17));
-        requestDto.setStartTime(LocalTime.of(17, 0));
-        requestDto.setEndTime(LocalTime.of(18, 0));
+        requestDto.setBookingDate(LocalDate.now().plusDays(1L));
+        requestDto.setStartTime(LocalTime.of(10, 0));
+        requestDto.setEndTime(LocalTime.of(12, 0));
         return requestDto;
     }
 
@@ -180,8 +180,8 @@ public class BookingControllerTest {
         requestDto.setRoomName("Earth");
         requestDto.setEmployeeEmail("pluto@acme.com");
         requestDto.setBookingDate(LocalDate.now());
-        requestDto.setStartTime(LocalTime.of(5, 0));
-        requestDto.setEndTime(LocalTime.of(6, 0));
+        requestDto.setStartTime(LocalTime.now());
+        requestDto.setEndTime(LocalTime.now().plusHours(1L));
         return requestDto;
     }
 
