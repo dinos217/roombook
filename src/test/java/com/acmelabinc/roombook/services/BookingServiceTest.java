@@ -186,7 +186,7 @@ public class BookingServiceTest {
         AlreadyExistsException exception = assertThrows(AlreadyExistsException.class,
                 () -> bookingService.save(requestDto));
 
-        assertEquals("This room is already booked for the selected hours.", exception.getMessage());
+        assertEquals("This room is already booked for the selected hours or overlaps another booking.", exception.getMessage());
     }
 
     @Test
